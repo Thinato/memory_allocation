@@ -2,64 +2,83 @@ from time import sleep
 from os import system
 import random
 
-## Printing
-def print_matrix(m, x, y):
-    res = ""
-    for i in range(x):
-        res+="┃"
-        for j in range(y): 
-            res += str(m[i][j]) + "┃"
-        res += '\n'
-    return res 
-
-def update_temp(m, x, y):
-    ## From temporary to allocated
-    spaces = 0
-    for i in range(x):
-        for j in range(y):
-            if m[i][j] == temp:
-                m[i][j] = allocated
-            elif m[i][j] == empty:
-                spaces+=1
-    return spaces
-    
-
-
-
-
-
-system('cls')
-size = input("Tamanho da tela (Formato: <X,Y>):\n")
-try:
-    size_split = size.split(',')
-    X = int(size_split[0])
-    Y = int(size_split[1])
-except:
-    X = 12
-    Y = 12
-
 ## Variaveis Globais
+matrix = []
+
 empty     = "_"
 allocated = "X"
 temp      = "T"
 
-max_spc   = X*Y
+tempEmpty = "E"
+tempEmpty0= "I"
+
+X = 0
+Y = 0
+max_spc   = 0
 empty_spc = max_spc
 
 running   = True
 searching = False
 
+def matrix_setup(m):
+    size = input("Tamanho da tela (Formato: <X,Y>):\n")
+    try:
+        size_split = size.split(',')
+        x = int(size_split[0])
+        y = int(size_split[1])
+    except:
+        x = 12
+        y = 12
+    space_maximum = x*y
+    space_empty   = space_maximum
+
+    ## Generate Matrixes
+    for i in range(y):
+        a = []
+        for j in range(x):
+            a.append("_")
+        m.append(a)
+
+    return x, y, space_maximum, space_empty
+
+## Imprimir Matriz
+def print_matrix(m, x, y):
+    res = ""
+    for i in range(y):
+        res+="┃"
+        for j in range(x): 
+            res += str(m[i][j]) + "┃"
+        res += '\n'
+    return res 
+
+
+## Atualizar Matriz
+def update_temp(m, x, y):
+    ## From temporary to allocated
+    spaces = 0
+    for i in range(y):
+        for j in range(x):
+            if m[i][j] == tempEmpty:
+                m[i][j] = empty
+                spaces+=1
+            elif m[i][j] == temp:
+                m[i][j] = allocated
+            elif m[i][j] == empty:
+                spaces+=1
+    return spaces
+    
+system('cls')
+X, Y, max_spc, empty_spc = matrix_setup(matrix)
 
 
 
-matrix = []
 
 ## Generate Matrixes
-for i in range(X):
-    a = []
-    for j in range(Y):
-        a.append(empty)
-    matrix.append(a)
+#for i in range(X):
+#    a = []
+#    for j in range(Y):
+#        a.append(empty)
+#    matrix.append(a)
 
 while running:
     system('cls')
@@ -69,8 +88,13 @@ while running:
     print("1. First fit\n"
         + "2. Best fit\n"
         + "3. Worst fit\n"
-        + "4. Clear matrix\n"
-        + "5. Randomize memory\n")
+        + "4. Take out memory\n"
+        + "--------------------\n\n"
+        + "5. Clear matrix\n"
+        + "6. Randomize memory\n"
+        + "7. Change Size\n"
+        + "--------------------\n\n"
+        + "0. Exit\n")
     
     enter = input("Enter: ")
     if enter == "1" or enter == "first":
@@ -80,8 +104,8 @@ while running:
 
         counter = 0
         searching = True
-        for i in range(X):
-            for j in range(Y):
+        for i in range(Y):
+            for j in range(X):
                 if matrix[i][j] == empty:
                     counter+=1
                     if counter == quantity:
@@ -97,8 +121,8 @@ while running:
         counter = 0
         while counter < quantity-1: 
             # Nao sei o porque do -1, mas funcionou então está ótimo kk
-            for i in range(X):
-                for j in range(Y):
+            for i in range(Y):
+                for j in range(X):
                     try:
                         if matrix[i][j] == temp:
                             matrix[prev_i][prev_j] = temp
@@ -118,17 +142,119 @@ while running:
     
     elif enter == "2" or enter == "best":
         system('cls')
-        quantity = input("Quantidade de memoria a ser alocada: ")
+        print(print_matrix(matrix, X, Y) + f"({empty_spc}/{max_spc} - {round((empty_spc/max_spc)*100, 1)}%)\n")
+        quantity = int(input("Quantidade de memoria a ser alocada: "))
+
+        counter = 0
+        counter_offset = 0
+
+        searching = True
+        while searching:
+            verify_best = 0
+            prev_i = 0
+            prev_j = 0
+
+            next_j = 0
+
+
+            for i in range(Y):
+                for j in range(X):
+
+                    if j == Y-1:
+                        next_j = 0
+                    else:
+                        next_j = j+1
+                    
+                    if matrix[i][j] == empty:
+                        counter+=1
+                    else:
+                        counter=counter_offset 
+                    if counter == quantity and matrix[i][next_j] == empty:
+                        counter = counter_offset 
+                    if counter == quantity and matrix[i][next_j] == allocated and searching:
+                        counter = counter_offset 
+                        matrix[i][j] = temp
+                        searching = False
+                        break
+
+                    prev_i = i
+                    prev_j = j
+            counter_offset-=1
+                
+
+        counter = 0
+        while counter < quantity-1: 
+            # Nao sei o porque do -1, mas funcionou então está ótimo kk
+            for i in range(Y):
+                for j in range(X):
+                    try:
+                        if matrix[i][j] == temp:
+                            matrix[prev_i][prev_j] = temp
+                        prev_i = i
+                        prev_j = j
+                    except:
+                        counter = quantity
+            counter+=1
+
+
+        if searching:
+            print("Escpaco insuficiente.")
+            sleep(1)
+        empty_spc = update_temp(matrix, X, Y)
+
+
+
     elif enter == "3" or enter == "worst":
         system('cls')
         quantity = input("Quantidade de memoria a ser alocada: ")
-    elif enter == "4" or enter == "clear":
+
+        
+    elif enter == "4" or enter == "takeout":
         system('cls')
-        for i in range(X):
-            for j in range(Y):
+        removing = False
+        XY_inicial0  = input("Ponto inicial <X,Y>: ")
+        XY_final0    = input("Ponto final <X,Y>: ")
+
+        inicial_split   = XY_inicial0.split(',')
+        final_split     = XY_final0.split(',')
+
+        inicial_X = int(inicial_split[0]) -1
+        inicial_Y = int(inicial_split[1]) -1
+
+        final_X = int(final_split[0]) -1
+        final_Y = int(final_split[1]) -1
+
+        matrix[inicial_X][inicial_Y] = tempEmpty0
+        matrix[final_X ][final_Y] = tempEmpty
+
+        if inicial_X == final_X and inicial_Y == final_Y:
+            matrix[inicial_X][inicial_Y] = tempEmpty
+        else:
+            removing = True
+
+        while removing: 
+            for i in range(Y):
+                for j in range(X):
+                    if matrix[i][j] == tempEmpty:
+                        if matrix[prev_i][prev_j] == tempEmpty0:
+                            matrix[inicial_X][inicial_Y] = tempEmpty
+                            removing = False
+                            break
+                        matrix[prev_i][prev_j] = tempEmpty
+                    prev_i = i
+                    prev_j = j
+
+
+
+        empty_spc = update_temp(matrix, X, Y)
+
+    elif enter == "5" or enter == "clear":
+        system('cls')
+        for i in range(Y):
+            for j in range(X):
                 matrix[i][j] = empty
         empty_spc = update_temp(matrix, X, Y)
-    elif enter == "5" or enter == "rand":
+    elif enter == "6" or enter == "rand":
         system('cls')
         percent = int(input("Porcentagem de alocação(%): "))
         # Transforma em Porcentagem
@@ -141,10 +267,10 @@ while running:
         matrix = []
         
         # Aplica na matrix
-        for i in range(X):
+        for i in range(Y):
             a = []
             # Pega as linhas da lista "lst" de acordo com o tamanho da matrix
-            for j in range(Y*i,Y+i*X):
+            for j in range(X*i, X + X*i):
                 # Tive de criar uma exceção para o ultimo item pois ele estava dando algum erro desconhecido,
                 # portanto ele sempre será um X, acredito que isso não importe muito
                 if j != max_spc-1:
@@ -155,6 +281,12 @@ while running:
             matrix.append(a)
         # Atualiza as "labels"
         empty_spc = update_temp(matrix, X, Y)
+    elif enter == "7":
+        system('cls')
+        matrix = []
+        X, Y, max_spc, empty_spc = matrix_setup(matrix)
+    elif enter == "0" or enter  ==  "exit":
+        exit()
     else:
         print("invalid input")
         sleep(.15)
