@@ -2,7 +2,7 @@ from time import sleep
 from os import system
 import random
 
-## Variaveis Globais
+## Variaveis Globais ##
 matrix = []
 
 empty     = "_"
@@ -14,11 +14,14 @@ tempEmpty0= "I"
 
 X = 0
 Y = 0
+
 max_spc   = 0
 empty_spc = max_spc
 
 running   = True
 searching = False
+##------------------##
+
 
 def matrix_setup(m):
     size = input("Tamanho da tela (Formato: <X,Y>):\n")
@@ -67,6 +70,27 @@ def update_temp(m, x, y):
                 spaces+=1
     return spaces
     
+def verify_worst(m, x, y):
+    counter = 0
+    highest = 0
+
+    h_X = 0
+    h_Y = 0
+
+    for i in range(x):
+        for j in range(y):
+            if m[i][j] == empty:
+                counter+=1
+            elif m[i][j] == allocated:
+                counter = 0
+            if counter > highest:
+                counter = highest
+                h_X = i
+                h_Y = j
+    return h_X, h_Y
+
+
+
 system('cls')
 X, Y, max_spc, empty_spc = matrix_setup(matrix)
 
@@ -153,27 +177,36 @@ while running:
             verify_best = 0
             prev_i = 0
             prev_j = 0
-
+            
+            next_i = 0
             next_j = 0
 
+            first_i = 0
+            first_j = 0
 
             for i in range(Y):
                 for j in range(X):
 
-                    if j == Y-1:
+                    if counter == counter_offset:
+                        first_i = i
+                        first_j = j
+
+                    if j == X-1:
                         next_j = 0
+                        next_i = i+1
                     else:
                         next_j = j+1
+                        next_i = i
                     
                     if matrix[i][j] == empty:
                         counter+=1
                     else:
-                        counter=counter_offset 
-                    if counter == quantity and matrix[i][next_j] == empty:
-                        counter = counter_offset 
-                    if counter == quantity and matrix[i][next_j] == allocated and searching:
-                        counter = counter_offset 
-                        matrix[i][j] = temp
+                        counter=counter_offset
+                    #if counter == quantity and matrix[next_i][next_j] == empty:
+                    #    counter = counter_offset 
+                    if counter == quantity and matrix[next_i][next_j] == allocated and searching:
+                        counter = counter_offset
+                        matrix[first_i][first_j] = temp
                         searching = False
                         break
 
@@ -183,17 +216,33 @@ while running:
                 
 
         counter = 0
-        while counter < quantity-1: 
-            # Nao sei o porque do -1, mas funcionou então está ótimo kk
+        while counter < quantity-1:
             for i in range(Y):
                 for j in range(X):
+                    if counter == quantity-1:
+                        break
+                    if j == X-1:
+                        next_j = 0
+                        next_i = i+1
+                    else:
+                        next_j = j+1
+                        next_i = i
+
                     try:
+                        if matrix[i][j] == temp and matrix[next_i][next_j] == empty:
+                            matrix[next_i][next_j] = temp
+                            counter+=1
+                    except:
+                        counter = quantity
+
+
+                    '''try:
                         if matrix[i][j] == temp:
                             matrix[prev_i][prev_j] = temp
                         prev_i = i
                         prev_j = j
                     except:
-                        counter = quantity
+                        counter = quantity'''
             counter+=1
 
 
@@ -207,6 +256,10 @@ while running:
     elif enter == "3" or enter == "worst":
         system('cls')
         quantity = input("Quantidade de memoria a ser alocada: ")
+        
+        gapX, gapY = verify_worst(matrix, X, Y)
+
+        
 
         
     elif enter == "4" or enter == "takeout":
@@ -263,7 +316,7 @@ while running:
         lst = int(filler) * ["X"] + int(max_spc-filler) * ["_"]
         # Embaralha os valores da lista
         random.shuffle(lst)
-        # Reseta a lista
+        # Reseta a lista/
         matrix = []
         
         # Aplica na matrix
