@@ -206,11 +206,12 @@ while running:
 
             for i in range(Y):
                 for j in range(X):
-
+                    # Reseta as coordenadas se o espaço estiver errado
                     if counter == counter_offset:
                         first_i = i
                         first_j = j
 
+                    # Pre-ve as prox coordenadas
                     if j == X-1:
                         next_j = 0
                         next_i = i+1
@@ -218,12 +219,15 @@ while running:
                         next_j = j+1
                         next_i = i
                     
+                    # Adiciona no counter, caso esteja um espaço vazio
                     if matrix[i][j] == empty:
                         counter+=1
                     else:
                         counter=counter_offset
                     #if counter == quantity and matrix[next_i][next_j] == empty:
                     #    counter = counter_offset 
+
+                    # Aloca o primeiro temp
                     if counter == quantity and matrix[next_i][next_j] == allocated and searching:
                         counter = counter_offset
                         matrix[first_i][first_j] = temp
@@ -232,10 +236,12 @@ while running:
 
                     prev_i = i
                     prev_j = j
-            counter_offset-=1
+            # Serve para procurar o tamanho correto, caso não tenha 2, vai para 3 e assim por diante
+            counter_offset-=1 
                 
 
         counter = 0
+        # Preenche de acordo com a quantidade desejada
         while counter < quantity-1:
             for i in range(Y):
                 for j in range(X):
